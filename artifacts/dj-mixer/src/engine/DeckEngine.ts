@@ -252,12 +252,40 @@ export class DeckEngine {
     this.loopActive = active;
     this.loopStart = start;
     this.loopEnd = end;
-    if (this.source) {
-      this.source.loop = active;
-      this.source.loopStart = start;
-      this.source.loopEnd = end;
+
+    if (this.mode === 'buffer') {
+      if (this.source) {
+        this.source.loop = active;
+        this.source.loopStart = start;
+        this.source.loopEnd = end;
+      }
+    } else if (this.mode === 'element' && this.audioElement) {
+      // HTMLAudioElement has no loop-range API — enforce via timeupdate
+      this._setupElementLoop(active, start, end);
     }
-    // Note: HTMLAudioElement looping is handled separately if needed
+  }
+
+  private _elementLoopHandler: (() => void) | null = null;
+
+  private _setupElementLoop(active: boolean, start: number, end: number) {
+    const el = this.audioElement;
+    if (!el) return;
+
+    // Remove any previous handler
+    if (this._elementLoopHandler) {
+      el.removeEventListener('timeupdate', this._elementLoopHandler);
+      this._elementLoopHandler = null;
+    }
+
+    if (!active) return;
+
+    const handler = () => {
+      if (el.currentTime >= end) {
+        el.currentTime = start;
+      }
+    };
+    this._elementLoopHandler = handler;
+    el.addEventListener('timeupdate', handler);
   }
 
   public disconnect() {

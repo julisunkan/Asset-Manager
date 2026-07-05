@@ -2,80 +2,151 @@ import React from 'react';
 import { useAppStore } from '../../state/useAppStore';
 import { mixerEngine } from '../../engine/MixerEngine';
 import AudioEngine from '../../engine/AudioEngine';
-import { ChannelStrip } from './ChannelStrip';
 import { Knob } from '../common/Knob';
+import { VUMeter } from './VUMeter';
 
 export function Mixer() {
-  const mixerState = useAppStore(state => state.mixer);
-  const updateMixer = useAppStore(state => state.updateMixer);
+  const mixerState = useAppStore(s => s.mixer);
+  const deckAState = useAppStore(s => s.deckA);
+  const deckBState = useAppStore(s => s.deckB);
+  const updateMixer = useAppStore(s => s.updateMixer);
+  const updateDeck = useAppStore(s => s.updateDeck);
 
-  const handleCrossfaderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const colorA = '#00E5FF';
+  const colorB = '#FF5252';
+
+  const handleCrossfader = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
     updateMixer({ crossfader: val });
     mixerEngine.setCrossfader(val, mixerState.crossfaderCurve);
   };
 
-  const handleMasterChange = (val: number) => {
+  const handleMaster = (val: number) => {
     updateMixer({ masterVolume: val });
     AudioEngine.getMasterGain().gain.value = val;
   };
 
-  return (
-    <div className="flex flex-col bg-card p-4 rounded-xl border border-border shadow-lg">
-      <div className="flex justify-between gap-6 flex-1">
-        
-        <ChannelStrip id="A" engine={mixerEngine.deckA} />
+  const setEq = (deck: 'A' | 'B', band: 'Low' | 'Mid' | 'High', val: number) => {
+    const engine = deck === 'A' ? mixerEngine.deckA : mixerEngine.deckB;
+    engine[`eq${band}`].gain.value = val;
+    updateDeck(deck, { [`eq${band}`]: val });
+  };
 
-        {/* Center Control Section */}
-        <div className="flex flex-col items-center pt-8 w-24 gap-6">
-          <Knob 
-            label="MASTER" 
-            value={mixerState.masterVolume} 
-            onChange={handleMasterChange} 
-            size={56} 
-            color="#00C853" 
+  const setVolume = (deck: 'A' | 'B', val: number) => {
+    const engine = deck === 'A' ? mixerEngine.deckA : mixerEngine.deckB;
+    engine.setVolume(val);
+    updateDeck(deck, { volume: val });
+  };
+
+  const knobSize = 34;
+
+  return (
+    <div className="flex items-center gap-3 bg-card rounded-xl px-4 py-3 border border-border">
+
+      {/* ── Deck A strip ── */}
+      <div className="flex items-center gap-3 flex-1">
+        <VUMeter analyser={mixerEngine.deckA.analyser} isActive={deckAState.isPlaying} />
+
+        {/* Volume Fader A */}
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-[9px] text-muted-foreground font-bold">VOL</span>
+          <input
+            type="range" min="0" max="1" step="0.01"
+            value={deckAState.volume}
+            onChange={e => setVolume('A', parseFloat(e.target.value))}
+            className="h-20 w-3 cursor-ns-resize"
+            style={{ accentColor: colorA, writingMode: 'vertical-lr', direction: 'rtl' }}
           />
-          <Knob 
-            label="PHONES" 
-            value={mixerState.headphoneVolume} 
-            onChange={(v) => updateMixer({ headphoneVolume: v })} 
-          />
-          
-          <div className="mt-auto mb-10 w-full flex flex-col items-center">
-            {/* VU Meter for Master */}
-            <div className="flex gap-1 h-32 mb-4">
-               {/* Left and Right Master VU would go here, we mock with Deck A/B for now */}
-               <div className="w-2 h-full bg-card-border rounded-sm"></div>
-               <div className="w-2 h-full bg-card-border rounded-sm"></div>
-            </div>
-          </div>
+          <span className="text-[9px] font-mono" style={{ color: colorA }}>
+            {Math.round(deckAState.volume * 100)}
+          </span>
         </div>
 
-        <ChannelStrip id="B" engine={mixerEngine.deckB} />
-
+        {/* EQ A */}
+        <div className="flex gap-2 items-end pb-1">
+          <Knob label="HI" value={deckAState.eqHigh} min={-12} max={12} size={knobSize}
+            onChange={v => setEq('A', 'High', v)} onDoubleClick={() => setEq('A', 'High', 0)} color={colorA} />
+          <Knob label="MID" value={deckAState.eqMid} min={-12} max={12} size={knobSize}
+            onChange={v => setEq('A', 'Mid', v)} onDoubleClick={() => setEq('A', 'Mid', 0)} color={colorA} />
+          <Knob label="LOW" value={deckAState.eqLow} min={-12} max={12} size={knobSize}
+            onChange={v => setEq('A', 'Low', v)} onDoubleClick={() => setEq('A', 'Low', 0)} color={colorA} />
+        </div>
       </div>
 
-      {/* Crossfader */}
-      <div className="mt-6 px-12 h-16 flex items-center bg-background rounded-lg border border-border relative">
-        <input 
-          type="range" 
-          min="0" max="1" step="0.01" 
-          value={mixerState.crossfader}
-          onChange={handleCrossfaderChange}
-          onDoubleClick={() => { updateMixer({ crossfader: 0.5 }); mixerEngine.setCrossfader(0.5, mixerState.crossfaderCurve); }}
-          className="w-full h-8 z-10 cursor-ew-resize opacity-0"
-        />
-        {/* Visual Track */}
-        <div className="absolute left-12 right-12 h-2 bg-card-border rounded pointer-events-none flex justify-between">
-           {[...Array(21)].map((_, i) => <div key={i} className="w-[1px] h-4 bg-muted-foreground/30 -mt-1" />)}
+      {/* ── Center ── */}
+      <div className="flex flex-col items-center gap-2 shrink-0 px-2">
+        <Knob label="MASTER" value={mixerState.masterVolume} min={0} max={1} size={42}
+          onChange={handleMaster} onDoubleClick={() => handleMaster(0.8)} color="#00C853" />
+
+        {/* Crossfader */}
+        <div className="flex flex-col items-center gap-1 w-40">
+          <div className="flex justify-between w-full text-[9px] font-bold text-muted-foreground px-1">
+            <span style={{ color: colorA }}>A</span>
+            <span style={{ color: colorB }}>B</span>
+          </div>
+          <div className="relative w-full h-8 flex items-center bg-background rounded border border-border">
+            <input
+              type="range" min="0" max="1" step="0.005"
+              value={mixerState.crossfader}
+              onChange={handleCrossfader}
+              onDoubleClick={() => {
+                updateMixer({ crossfader: 0.5 });
+                mixerEngine.setCrossfader(0.5, mixerState.crossfaderCurve);
+              }}
+              className="w-full px-2 cursor-ew-resize"
+              style={{ accentColor: '#ffffff' }}
+            />
+          </div>
+          {/* Curve selector */}
+          <div className="flex gap-1">
+            {(['linear', 'fast', 'slow'] as const).map(curve => (
+              <button
+                key={curve}
+                className={`px-1.5 py-0.5 rounded text-[8px] font-bold transition-colors border ${
+                  mixerState.crossfaderCurve === curve
+                    ? 'bg-primary/20 border-primary/50 text-primary'
+                    : 'bg-background border-border text-muted-foreground hover:text-foreground'
+                }`}
+                onClick={() => {
+                  updateMixer({ crossfaderCurve: curve });
+                  mixerEngine.setCrossfader(mixerState.crossfader, curve);
+                }}
+              >
+                {curve === 'linear' ? 'LIN' : curve === 'fast' ? 'CUT' : 'SLOW'}
+              </button>
+            ))}
+          </div>
         </div>
-        {/* Visual Cap */}
-        <div 
-          className="absolute w-12 h-10 bg-card border-2 border-border shadow-md rounded flex justify-center items-center pointer-events-none transition-none"
-          style={{ left: `calc(3rem + ${mixerState.crossfader * 100}% - ${mixerState.crossfader * 3}rem - 1.5rem)` }}
-        >
-          <div className="w-1 h-6 bg-primary/80 rounded-full" />
+      </div>
+
+      {/* ── Deck B strip ── */}
+      <div className="flex items-center gap-3 flex-1 justify-end">
+        {/* EQ B */}
+        <div className="flex gap-2 items-end pb-1">
+          <Knob label="LOW" value={deckBState.eqLow} min={-12} max={12} size={knobSize}
+            onChange={v => setEq('B', 'Low', v)} onDoubleClick={() => setEq('B', 'Low', 0)} color={colorB} />
+          <Knob label="MID" value={deckBState.eqMid} min={-12} max={12} size={knobSize}
+            onChange={v => setEq('B', 'Mid', v)} onDoubleClick={() => setEq('B', 'Mid', 0)} color={colorB} />
+          <Knob label="HI" value={deckBState.eqHigh} min={-12} max={12} size={knobSize}
+            onChange={v => setEq('B', 'High', v)} onDoubleClick={() => setEq('B', 'High', 0)} color={colorB} />
         </div>
+
+        {/* Volume Fader B */}
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-[9px] text-muted-foreground font-bold">VOL</span>
+          <input
+            type="range" min="0" max="1" step="0.01"
+            value={deckBState.volume}
+            onChange={e => setVolume('B', parseFloat(e.target.value))}
+            className="h-20 w-3 cursor-ns-resize"
+            style={{ accentColor: colorB, writingMode: 'vertical-lr', direction: 'rtl' }}
+          />
+          <span className="text-[9px] font-mono" style={{ color: colorB }}>
+            {Math.round(deckBState.volume * 100)}
+          </span>
+        </div>
+
+        <VUMeter analyser={mixerEngine.deckB.analyser} isActive={deckBState.isPlaying} />
       </div>
     </div>
   );

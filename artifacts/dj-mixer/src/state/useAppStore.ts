@@ -8,17 +8,25 @@ interface AppState {
   mixer: MixerState;
   effects: EffectConfig[];
   activeDeckFocus: 'A' | 'B';
-  
+  activeVibe: string | null;
+  libraryOpen: boolean;
+
   // Actions
   addTrack: (track: TrackInfo) => void;
   updateTrack: (id: string, updates: Partial<TrackInfo>) => void;
   removeTrack: (id: string) => void;
-  
+
   loadToDeck: (deck: 'A' | 'B', trackId: string) => void;
   updateDeck: (deck: 'A' | 'B', updates: Partial<DeckState>) => void;
   updateMixer: (updates: Partial<MixerState>) => void;
   updateEffect: (effectId: string, updates: Partial<EffectConfig>) => void;
   setActiveDeckFocus: (deck: 'A' | 'B') => void;
+  setActiveVibe: (vibe: string | null) => void;
+  setLibraryOpen: (open: boolean) => void;
+
+  /** Set or update a hot cue on the currently-loaded track for a deck. */
+  setHotCue: (deck: 'A' | 'B', index: number, time: number) => void;
+  clearHotCue: (deck: 'A' | 'B', index: number) => void;
 }
 
 const defaultDeckState: DeckState = {
@@ -38,51 +46,85 @@ const defaultDeckState: DeckState = {
   activeHotCue: null,
 };
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   library: [],
   deckA: { ...defaultDeckState },
   deckB: { ...defaultDeckState },
   mixer: {
     crossfader: 0.5,
     crossfaderCurve: 'linear',
-    masterVolume: 1.0,
+    masterVolume: 0.8,
     headphoneVolume: 0.5,
     deckACue: false,
     deckBCue: false,
   },
   effects: [
-    { id: 'fx1', type: 'reverb', enabled: false, mix: 0.5, intensity: 0.5, preset: 'hall', params: {} },
-    { id: 'fx2', type: 'echo', enabled: false, mix: 0.5, intensity: 0.5, preset: '1/4', params: {} },
-    { id: 'fx3', type: 'flanger', enabled: false, mix: 0.5, intensity: 0.5, preset: 'default', params: {} },
-    { id: 'fx4', type: 'compressor', enabled: false, mix: 0.5, intensity: 0.5, preset: 'default', params: {} },
+    { id: 'fx1', type: 'reverb',     enabled: false, mix: 0.5, intensity: 0.5, preset: 'hall',    params: {} },
+    { id: 'fx2', type: 'echo',       enabled: false, mix: 0.5, intensity: 0.5, preset: '1/4',     params: {} },
+    { id: 'fx3', type: 'distortion', enabled: false, mix: 0.5, intensity: 0.5, preset: 'default', params: {} },
+    { id: 'fx4', type: 'flanger',    enabled: false, mix: 0.5, intensity: 0.5, preset: 'default', params: {} },
   ],
   activeDeckFocus: 'A',
-  
-  addTrack: (track) => set((state) => ({ library: [...state.library, track] })),
-  
-  updateTrack: (id, updates) => set((state) => ({
-    library: state.library.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+  activeVibe: null,
+  libraryOpen: false,
+
+  addTrack: (track) => set((s) => ({ library: [...s.library, track] })),
+
+  updateTrack: (id, updates) => set((s) => ({
+    library: s.library.map((t) => (t.id === id ? { ...t, ...updates } : t)),
   })),
-  
-  removeTrack: (id) => set((state) => ({
-    library: state.library.filter((t) => t.id !== id),
+
+  removeTrack: (id) => set((s) => ({ library: s.library.filter((t) => t.id !== id) })),
+
+  loadToDeck: (deck, trackId) => set((s) => ({
+    [deck === 'A' ? 'deckA' : 'deckB']: {
+      ...s[deck === 'A' ? 'deckA' : 'deckB'],
+      trackId,
+      isPlaying: false,
+      currentTime: 0,
+      playbackRate: 1.0,
+      loopActive: false,
+      activeHotCue: null,
+    },
   })),
-  
-  loadToDeck: (deck, trackId) => set((state) => ({
-    [deck === 'A' ? 'deckA' : 'deckB']: { ...state[deck === 'A' ? 'deckA' : 'deckB'], trackId, isPlaying: false, currentTime: 0, playbackRate: 1.0 }
+
+  updateDeck: (deck, updates) => set((s) => ({
+    [deck === 'A' ? 'deckA' : 'deckB']: { ...s[deck === 'A' ? 'deckA' : 'deckB'], ...updates },
   })),
-  
-  updateDeck: (deck, updates) => set((state) => ({
-    [deck === 'A' ? 'deckA' : 'deckB']: { ...state[deck === 'A' ? 'deckA' : 'deckB'], ...updates }
+
+  updateMixer: (updates) => set((s) => ({ mixer: { ...s.mixer, ...updates } })),
+
+  updateEffect: (effectId, updates) => set((s) => ({
+    effects: s.effects.map((fx) => (fx.id === effectId ? { ...fx, ...updates } : fx)),
   })),
-  
-  updateMixer: (updates) => set((state) => ({
-    mixer: { ...state.mixer, ...updates }
-  })),
-  
-  updateEffect: (effectId, updates) => set((state) => ({
-    effects: state.effects.map((fx) => (fx.id === effectId ? { ...fx, ...updates } : fx))
-  })),
-  
-  setActiveDeckFocus: (deck) => set({ activeDeckFocus: deck })
+
+  setActiveDeckFocus: (deck) => set({ activeDeckFocus: deck }),
+  setActiveVibe: (vibe) => set({ activeVibe: vibe }),
+  setLibraryOpen: (open) => set({ libraryOpen: open }),
+
+  setHotCue: (deck, index, time) => {
+    const state = get();
+    const deckState = deck === 'A' ? state.deckA : state.deckB;
+    if (!deckState.trackId) return;
+
+    const track = state.library.find((t) => t.id === deckState.trackId);
+    if (!track) return;
+
+    const existingCues = track.hotCues.filter((c) => c.index !== index);
+    const colors = ['#FF8C00', '#00C853', '#9C27B0', '#2196F3'];
+    const newCue: HotCue = { index, position: time, name: `CUE ${index + 1}`, color: colors[index] ?? '#ffffff' };
+
+    get().updateTrack(deckState.trackId, { hotCues: [...existingCues, newCue] });
+  },
+
+  clearHotCue: (deck, index) => {
+    const state = get();
+    const deckState = deck === 'A' ? state.deckA : state.deckB;
+    if (!deckState.trackId) return;
+
+    const track = state.library.find((t) => t.id === deckState.trackId);
+    if (!track) return;
+
+    get().updateTrack(deckState.trackId, { hotCues: track.hotCues.filter((c) => c.index !== index) });
+  },
 }));
