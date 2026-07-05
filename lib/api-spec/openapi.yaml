@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: tracks
+    description: Music library track metadata and cue points
 paths:
   /healthz:
     get:
@@ -24,6 +26,80 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /tracks:
+    get:
+      operationId: listTracks
+      tags: [tracks]
+      summary: List library tracks
+      description: Returns all saved track metadata and cue points
+      responses:
+        "200":
+          description: List of tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Track"
+    post:
+      operationId: upsertTrack
+      tags: [tracks]
+      summary: Create or update a track by fingerprint
+      description: If a track with the same fingerprint exists, it is updated; otherwise created.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertTrack"
+      responses:
+        "200":
+          description: The created or updated track
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+  /tracks/{id}:
+    patch:
+      operationId: updateTrack
+      tags: [tracks]
+      summary: Update a track
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTrack"
+      responses:
+        "200":
+          description: The updated track
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+        "404":
+          description: Track not found
+    delete:
+      operationId: deleteTrack
+      tags: [tracks]
+      summary: Delete a track
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Track not found
 components:
   schemas:
     HealthStatus:
@@ -33,4 +109,146 @@ components:
           type: string
       required:
         - status
+    HotCue:
+      type: object
+      properties:
+        index:
+          type: number
+        position:
+          type: number
+        name:
+          type: string
+        color:
+          type: string
+      required: [index, position, name, color]
+    Track:
+      type: object
+      properties:
+        id:
+          type: string
+        fingerprint:
+          type: string
+        name:
+          type: string
+        artist:
+          type: string
+        album:
+          type: string
+        genre:
+          type: string
+        duration:
+          type: number
+        bpm:
+          type: number
+          nullable: true
+        bpmConfidence:
+          type: number
+        key:
+          type: string
+          nullable: true
+        camelot:
+          type: string
+          nullable: true
+        energy:
+          type: number
+        mood:
+          type: string
+        danceability:
+          type: number
+        loudness:
+          type: number
+        albumArt:
+          type: string
+          nullable: true
+        isFavorite:
+          type: boolean
+        colorLabel:
+          type: string
+          nullable: true
+        hotCues:
+          type: array
+          items:
+            $ref: "#/components/schemas/HotCue"
+        loopIn:
+          type: number
+          nullable: true
+        loopOut:
+          type: number
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - fingerprint
+        - name
+        - artist
+        - album
+        - genre
+        - duration
+        - bpmConfidence
+        - energy
+        - mood
+        - danceability
+        - loudness
+        - isFavorite
+        - hotCues
+        - createdAt
+        - updatedAt
+    UpsertTrack:
+      allOf:
+        - $ref: "#/components/schemas/Track"
+      description: Same shape as Track, minus server-generated fields
+    UpdateTrack:
+      type: object
+      description: Partial update, any subset of Track fields (excluding id/fingerprint)
+      properties:
+        name:
+          type: string
+        artist:
+          type: string
+        album:
+          type: string
+        genre:
+          type: string
+        duration:
+          type: number
+        bpm:
+          type: number
+          nullable: true
+        bpmConfidence:
+          type: number
+        key:
+          type: string
+          nullable: true
+        camelot:
+          type: string
+          nullable: true
+        energy:
+          type: number
+        mood:
+          type: string
+        danceability:
+          type: number
+        loudness:
+          type: number
+        albumArt:
+          type: string
+          nullable: true
+        isFavorite:
+          type: boolean
+        colorLabel:
+          type: string
+          nullable: true
+        hotCues:
+          type: array
+          items:
+            $ref: "#/components/schemas/HotCue"
+        loopIn:
+          type: number
+          nullable: true
+        loopOut:
+          type: number
+          nullable: true
 

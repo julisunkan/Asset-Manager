@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { TrackInfo, DeckState, MixerState, EffectConfig, HotCue } from '../types';
+import { syncUpsert, syncPatch, syncDelete } from '../lib/librarySync';
 
 interface AppState {
   library: TrackInfo[];
@@ -68,13 +69,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeVibe: null,
   libraryOpen: false,
 
-  addTrack: (track) => set((s) => ({ library: [...s.library, track] })),
+  addTrack: (track) => {
+    set((s) => ({ library: [...s.library, track] }));
+    syncUpsert(track);
+  },
 
-  updateTrack: (id, updates) => set((s) => ({
-    library: s.library.map((t) => (t.id === id ? { ...t, ...updates } : t)),
-  })),
+  updateTrack: (id, updates) => {
+    set((s) => ({
+      library: s.library.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+    }));
+    syncPatch(id, updates);
+  },
 
-  removeTrack: (id) => set((s) => ({ library: s.library.filter((t) => t.id !== id) })),
+  removeTrack: (id) => {
+    set((s) => ({ library: s.library.filter((t) => t.id !== id) }));
+    syncDelete(id);
+  },
 
   loadToDeck: (deck, trackId) => set((s) => ({
     [deck === 'A' ? 'deckA' : 'deckB']: {

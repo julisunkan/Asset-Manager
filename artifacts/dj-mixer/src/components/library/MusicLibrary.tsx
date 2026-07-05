@@ -4,6 +4,9 @@ import { useAppStore } from '../../state/useAppStore';
 import { TrackInfo } from '../../types';
 import { parseID3 } from '../../engine/TrackParser';
 import { parsePlaylistUrl, looksLikePlaylist } from '../../engine/PlaylistParser';
+import { useListTracks } from '@workspace/api-client-react';
+import { applySavedTrack } from '../../lib/librarySync';
+import { fingerprintFor } from '../../lib/fingerprint';
 
 export function MusicLibrary() {
   const library = useAppStore(state => state.library);
@@ -11,6 +14,10 @@ export function MusicLibrary() {
   const loadToDeck = useAppStore(state => state.loadToDeck);
   const activeFocus = useAppStore(state => state.activeDeckFocus);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Previously-saved track metadata (bpm/key/cues/favorites) keyed by fingerprint,
+  // so re-adding the same local file restores everything without re-analyzing.
+  const { data: savedTracks } = useListTracks();
 
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlValue, setUrlValue] = useState('');
@@ -27,7 +34,7 @@ export function MusicLibrary() {
 
       const meta = await parseID3(file);
 
-      const track: TrackInfo = {
+      let track: TrackInfo = {
         id: crypto.randomUUID(),
         file,
         name: meta.title || file.name,
@@ -52,8 +59,16 @@ export function MusicLibrary() {
         loopOut: null,
       };
 
+      const fingerprint = fingerprintFor(track);
+      const saved = fingerprint ? savedTracks?.find((t) => t.fingerprint === fingerprint) : undefined;
+      if (saved) {
+        track = applySavedTrack(track, saved);
+      }
+
       addTrack(track);
-      analyzeTrackFile(track);
+      if (!saved || saved.bpm == null) {
+        analyzeTrackFile(track);
+      }
     }
   };
 
@@ -154,9 +169,12 @@ export function MusicLibrary() {
           return;
         }
         for (const entry of entries) {
-          const track = makeUrlTrack(entry.url, entry.name || entry.url, entry.artist);
+          let track = makeUrlTrack(entry.url, entry.name || entry.url, entry.artist);
+          const fingerprint = fingerprintFor(track);
+          const saved = fingerprint ? savedTracks?.find((t) => t.fingerprint === fingerprint) : undefined;
+          if (saved) track = applySavedTrack(track, saved);
           addTrack(track);
-          analyzeTrackUrl(track);
+          if (!saved || saved.bpm == null) analyzeTrackUrl(track);
         }
         setUrlSuccess(`Added ${entries.length} track${entries.length !== 1 ? 's' : ''} from playlist`);
         setUrlValue('');
@@ -179,9 +197,12 @@ export function MusicLibrary() {
       decodeURIComponent(parsed.pathname.split('/').filter(Boolean).pop() || parsed.hostname) ||
       'Remote Track';
 
-    const track = makeUrlTrack(raw, derivedName, parsed.hostname);
+    let track = makeUrlTrack(raw, derivedName, parsed.hostname);
+    const fingerprint = fingerprintFor(track);
+    const saved = fingerprint ? savedTracks?.find((t) => t.fingerprint === fingerprint) : undefined;
+    if (saved) track = applySavedTrack(track, saved);
     addTrack(track);
-    analyzeTrackUrl(track);
+    if (!saved || saved.bpm == null) analyzeTrackUrl(track);
 
     setUrlValue('');
     setUrlName('');
