@@ -1,6 +1,6 @@
-# [Project name]
+# DJ & Mixer
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A professional browser-based DJ application — dual decks, full mixer, effects, and AI mix assistant — where all audio processing stays 100% local on the user's device.
 
 ## Run & Operate
 
@@ -26,11 +26,23 @@ _Populate as you build — short repo map plus pointers to the source-of-truth f
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Audio chain per deck:** source → analyser → eqLow → eqMid → eqHigh → filter → trimGain (knob) → gainNode (volume fader) → crossfaderGainX → masterGain → destination. TrimGain and gainNode are separate so they don't overwrite each other.
+- **AudioContext lazy-init:** context created only on first user gesture (required by browser autoplay policy). AudioEngine singleton used everywhere.
+- **Web Worker for analysis:** BPM and key detection run in `analysis.worker.ts` via `new Worker(new URL(..., import.meta.url))` — never blocks the UI thread.
+- **WaveSurfer.js v7:** uses `wavesurfer.loadBlob(file)` (v7 API), not `load(url)`. Waveform is visualization-only; audio playback is via DeckEngine's AudioBufferSourceNode.
+- **FFmpeg.wasm export:** requires COOP/COEP headers for SharedArrayBuffer. Falls back to WAV-only export if headers aren't set.
+- **Privacy:** no server endpoints for audio. The Express API server is unused by this app (only /api/healthz exists). Music files stay in browser memory (FileReader/File API only).
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Dual DJ decks with WaveSurfer.js waveforms, transport controls, BPM/pitch/sync, loops, and 8 hot cues per deck
+- Center mixer: crossfader (equal-power curve), channel volume faders, 3-band EQ, filter, VU meters
+- Effects rack: reverb, echo/delay, flanger, phaser, compressor, distortion, HPF/LPF, bass/treble boost, stereo width
+- Music library: drag & drop or file picker, local ID3 tag parsing, BPM/key detection via Web Worker, search/sort/filter/favorites
+- AI Mix Assistant (right sidebar): harmonic compatibility (Camelot wheel), transition suggestions, smart playlists, track energy/mood/danceability analysis
+- Export via OfflineAudioContext + FFmpeg.wasm (WAV/MP3) — no upload, never leaves device
+- Settings: theme, audio latency, export quality, keyboard shortcuts
+- Privacy guarantee: music files never leave the browser
 
 ## User preferences
 

@@ -1,0 +1,753 @@
+# ROLE
+
+You are a senior full-stack software engineer, UI/UX designer, audio DSP engineer, and AI engineer.
+
+Build a production-quality web application called **DJ & Mixer**.
+
+The application should have a modern professional interface inspired by Serato DJ, Rekordbox, VirtualDJ, and djay Pro while remaining simple enough for beginners.
+
+Write clean, modular, scalable, production-ready code with comments and documentation.
+
+---
+
+# MOST IMPORTANT REQUIREMENT
+
+This application is **100% privacy-first**.
+
+## ABSOLUTE RULES
+
+- Music/audio files MUST NEVER be uploaded to the server.
+- Music files MUST NEVER leave the user's device.
+- Flask MUST NEVER receive audio files.
+- Do NOT create upload endpoints.
+- Do NOT save temporary audio files.
+- Do NOT perform server-side audio processing.
+- Do NOT use cloud AI for audio analysis.
+- Do NOT send music through WebSockets.
+- Do NOT transmit audio in any way.
+
+The Flask backend should ONLY serve:
+
+- HTML
+- CSS
+- JavaScript
+- Images
+- Icons
+- Fonts
+- Static AI model files (optional)
+
+All music analysis, playback, mixing, effects, AI inference, rendering, and exporting must happen entirely inside the user's browser.
+
+---
+
+# TECH STACK
+
+Backend
+
+- Python 3.13+
+- Flask
+- Jinja2
+
+Frontend
+
+- HTML5
+- Tailwind CSS
+- Vanilla JavaScript (ES2023)
+
+Browser APIs
+
+- Web Audio API
+- AudioWorklet
+- OfflineAudioContext
+- File API
+- Drag & Drop API
+- IndexedDB (optional for settings only)
+- Web Workers
+
+Libraries
+
+- WaveSurfer.js
+- Tone.js
+- FFmpeg.wasm
+- ONNX Runtime Web
+- TensorFlow.js
+- SortableJS
+- Chart.js
+
+Do NOT use jQuery.
+
+---
+
+# APPLICATION NAME
+
+DJ & Mixer
+
+---
+
+# DESIGN
+
+Create a premium DJ software interface.
+
+Dark Mode
+
+Background:
+#0B0D10
+
+Panels:
+#1A1D22
+
+Accent:
+#00E5FF
+
+Success:
+#00C853
+
+Warning:
+#FFC107
+
+Danger:
+#FF5252
+
+Typography
+
+Inter
+
+Animations
+
+Smooth
+
+Professional
+
+Glassmorphism
+
+Rounded corners
+
+Responsive
+
+---
+
+# LAYOUT
+
+Top Navigation
+
+- Logo
+- DJ & Mixer
+- Settings
+- Help
+- Theme Toggle
+
+Left Sidebar
+
+Music Library
+
+Center
+
+Dual DJ Decks
+
+Mixer
+
+Waveforms
+
+Bottom
+
+Timeline
+
+Playback
+
+Right Sidebar
+
+AI Assistant
+
+Track Analysis
+
+Recommendations
+
+---
+
+# MUSIC IMPORT
+
+Support
+
+- Drag & Drop
+- File Picker
+
+Supported Formats
+
+- MP3
+- WAV
+- FLAC
+- OGG
+- AAC
+- M4A
+
+Read files using the browser File API.
+
+Never upload files.
+
+Keep files in browser memory only.
+
+---
+
+# MUSIC LIBRARY
+
+Display
+
+- Album Art
+- Song Name
+- Artist
+- Duration
+- BPM
+- Musical Key
+- Genre
+- Energy
+- Mood
+- Loudness
+- Sample Rate
+- Bitrate
+
+Allow
+
+- Search
+- Sort
+- Filter
+- Favorite
+- Color Labels
+- Multiple Selection
+
+---
+
+# WAVEFORMS
+
+Display beautiful waveforms using WaveSurfer.js.
+
+Include
+
+- Zoom
+- Scroll
+- Beat Markers
+- Cue Markers
+- Loop Markers
+- Timeline
+- Colored Frequencies
+- Needle Position
+- Hover Time
+
+---
+
+# DUAL DJ DECKS
+
+Deck A
+
+Deck B
+
+Each deck must include
+
+- Play
+- Pause
+- Stop
+- Cue
+- Sync
+- Tempo
+- Pitch
+- Master Volume
+- Gain
+- EQ
+- Loop
+- Progress
+- Remaining Time
+- Elapsed Time
+- Waveform
+
+---
+
+# MIXER
+
+Center Mixer
+
+Include
+
+- Crossfader
+- Channel Volume
+- Gain
+- EQ Low
+- EQ Mid
+- EQ High
+- Filter
+- Cue Buttons
+- Headphone Volume
+- Master Output
+- Peak Meter
+- VU Meter
+
+---
+
+# AUDIO EFFECTS
+
+Include
+
+- Reverb
+- Echo
+- Delay
+- Flanger
+- Phaser
+- Chorus
+- Compressor
+- Limiter
+- Distortion
+- High Pass Filter
+- Low Pass Filter
+- Bass Boost
+- Treble Boost
+- Stereo Width
+
+Each effect should have
+
+- Enable
+- Disable
+- Mix
+- Intensity
+- Presets
+- Reset
+
+---
+
+# BPM DETECTION
+
+Estimate BPM locally.
+
+Display confidence percentage.
+
+Allow manual correction.
+
+---
+
+# KEY DETECTION
+
+Estimate musical key.
+
+Display
+
+- Standard Key
+- Camelot Wheel notation
+
+Suggest compatible tracks.
+
+---
+
+# AI ANALYSIS
+
+Everything must run locally.
+
+Use ONNX Runtime Web or TensorFlow.js.
+
+Analyze every track.
+
+Detect
+
+- BPM
+- Key
+- Beat Grid
+- Downbeats
+- Loudness
+- Energy
+- Mood
+- Danceability
+- Genre
+- Dynamic Range
+- Silence Sections
+- Transition Points
+- Cue Suggestions
+
+Display confidence values.
+
+---
+
+# AI MIX ASSISTANT
+
+Provide intelligent recommendations.
+
+Examples
+
+"This song matches Track 4."
+
+"Lower tempo by 2 BPM."
+
+"Raise pitch by one semitone."
+
+"Best transition starts at 02:14."
+
+"Tracks are harmonically compatible."
+
+"Suggested crossfade duration: 8 seconds."
+
+---
+
+# HARMONIC MIXING
+
+Support Camelot Wheel.
+
+Show compatible keys.
+
+Recommend transitions.
+
+Display harmonic compatibility.
+
+---
+
+# SMART PLAYLISTS
+
+Automatically build playlists based on
+
+- BPM
+- Energy
+- Mood
+- Genre
+- Key
+
+Examples
+
+- Workout
+- Party
+- Chill
+- Driving
+- House
+- Techno
+- EDM
+- Hip Hop
+- Jazz
+- Relax
+
+---
+
+# AUTO MIX
+
+One-click Auto Mix.
+
+Workflow
+
+Analyze tracks
+
+↓
+
+Find compatible BPM
+
+↓
+
+Find compatible key
+
+↓
+
+Suggest order
+
+↓
+
+Beat match
+
+↓
+
+Crossfade
+
+↓
+
+Normalize loudness
+
+↓
+
+Generate seamless mix
+
+↓
+
+Preview
+
+↓
+
+Export
+
+---
+
+# LOOPS
+
+Support
+
+- 1 Beat
+- 2 Beat
+- 4 Beat
+- 8 Beat
+- 16 Beat
+- 32 Beat
+- Custom Loop
+
+Include
+
+Loop In
+
+Loop Out
+
+---
+
+# HOT CUES
+
+Support
+
+8 cue points per track.
+
+Allow
+
+- Rename
+- Delete
+- Color
+- Jump
+
+---
+
+# EXPORT
+
+Export entirely in browser.
+
+Never upload.
+
+Use OfflineAudioContext.
+
+Support
+
+- WAV
+- MP3
+- FLAC (if possible)
+
+Options
+
+- 128 kbps
+- 192 kbps
+- 256 kbps
+- 320 kbps
+
+Include
+
+- Normalize
+- Fade In
+- Fade Out
+- Metadata
+- Custom Filename
+
+---
+
+# PERFORMANCE
+
+Must support
+
+50–100 songs.
+
+Use
+
+- Web Workers
+- AudioWorklets
+- requestAnimationFrame
+- Lazy Loading
+- Efficient Rendering
+
+Avoid blocking the UI.
+
+---
+
+# RESPONSIVE DESIGN
+
+Support
+
+- Desktop
+- Laptop
+- Tablet
+
+Minimum width
+
+320px
+
+---
+
+# SETTINGS
+
+Allow users to configure
+
+- Theme
+- Audio Latency
+- Crossfade Duration
+- Waveform Colors
+- Default Effects
+- Export Quality
+- Keyboard Shortcuts
+
+---
+
+# KEYBOARD SHORTCUTS
+
+Space = Play/Pause
+
+Left Arrow = Seek Back
+
+Right Arrow = Seek Forward
+
+1 = Cue
+
+2 = Loop
+
+S = Sync
+
+M = Mute
+
+---
+
+# PRIVACY NOTICE
+
+Display prominently.
+
+"Your music never leaves your device. All analysis, effects, mixing, and exporting happen locally inside your browser."
+
+---
+
+# FLASK BACKEND
+
+Flask should ONLY provide
+
+/
+
+index page
+
+/static
+
+CSS
+
+JavaScript
+
+Fonts
+
+Icons
+
+Models
+
+/settings (optional)
+
+DO NOT create
+
+/upload
+
+/process
+
+/analyze
+
+/mix
+
+/export
+
+or any endpoint that accepts audio files.
+
+---
+
+# PROJECT STRUCTURE
+
+DJ-Mixer/
+
+app.py
+
+requirements.txt
+
+README.md
+
+templates/
+
+    index.html
+
+static/
+
+    css/
+
+    js/
+
+        app.js
+
+        audio.js
+
+        mixer.js
+
+        waveform.js
+
+        effects.js
+
+        ai.js
+
+        export.js
+
+        settings.js
+
+        ui.js
+
+        workers/
+
+    models/
+
+    fonts/
+
+    icons/
+
+---
+
+# CODE QUALITY
+
+Use
+
+- ES Modules
+- SOLID principles
+- Modular architecture
+- JSDoc comments
+- Clean naming
+- Error handling
+- Accessibility (ARIA)
+- Keyboard navigation
+- High performance
+
+Separate
+
+- UI
+- Audio Engine
+- AI Engine
+- Effects Engine
+- Export Engine
+- State Management
+
+into independent modules.
+
+---
+
+# FUTURE FEATURES
+
+Architect the application so these can be added later without major refactoring.
+
+- MIDI Controller Support
+- Web MIDI API
+- Live Microphone Input
+- AI Stem Separation
+- AI Remix Generator
+- Browser-to-Browser Collaboration (WebRTC)
+- Real-Time Recording
+- Sample Pads
+- AI DJ Assistant
+- PWA Offline Support
+
+---
+
+# EXPECTED OUTPUT
+
+Generate a complete, production-ready project including:
+
+- Flask backend (serving static assets only)
+- Modern responsive UI
+- Local audio engine using Web Audio API
+- Local AI inference using ONNX Runtime Web or TensorFlow.js
+- WaveSurfer.js waveform visualization
+- Offline audio rendering
+- Browser-only export
+- Complete documentation
+- Installation guide
+- Architecture documentation
+- Browser compatibility guide
+- Well-structured codebase
+
+The final application must guarantee that the user's music never leaves their device. Privacy is a core feature and must never be compromised.

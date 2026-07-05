@@ -1,0 +1,163 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+
+  --font-sans: 'Inter', sans-serif;
+  
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+:root {
+  --background: 220 18% 5%; /* #0B0D10 */
+  --foreground: 216 11% 92%; /* #E8EAED */
+  
+  --border: 224 11% 19%; /* #2A2D35 */
+  --input: 224 11% 19%;
+  --ring: 186 100% 50%; /* #00E5FF */
+  
+  --card: 218 13% 12%; /* #1A1D22 */
+  --card-foreground: 216 11% 92%;
+  --card-border: 224 11% 19%;
+  
+  --popover: 218 13% 12%;
+  --popover-foreground: 216 11% 92%;
+  --popover-border: 224 11% 19%;
+  
+  --primary: 186 100% 50%; /* Cyan #00E5FF */
+  --primary-foreground: 220 18% 5%; /* Dark for contrast */
+  
+  --secondary: 224 11% 19%;
+  --secondary-foreground: 216 11% 92%;
+  
+  --muted: 218 13% 12%;
+  --muted-foreground: 217 19% 46%; /* #6B7280 */
+  
+  --accent: 186 100% 50%;
+  --accent-foreground: 220 18% 5%;
+  
+  --destructive: 360 100% 66%; /* #FF5252 */
+  --destructive-foreground: 216 11% 92%;
+
+  --sidebar: 218 13% 12%;
+  --sidebar-foreground: 216 11% 92%;
+  --sidebar-border: 224 11% 19%;
+  --sidebar-primary: 186 100% 50%;
+  --sidebar-primary-foreground: 220 18% 5%;
+  --sidebar-accent: 224 11% 19%;
+  --sidebar-accent-foreground: 216 11% 92%;
+  
+  --radius: 8px;
+}
+
+.dark {
+  --background: 220 18% 5%;
+  --foreground: 216 11% 92%;
+  
+  --border: 224 11% 19%;
+  --input: 224 11% 19%;
+  --ring: 186 100% 50%;
+  
+  --card: 218 13% 12%;
+  --card-foreground: 216 11% 92%;
+  --card-border: 224 11% 19%;
+  
+  --popover: 218 13% 12%;
+  --popover-foreground: 216 11% 92%;
+  --popover-border: 224 11% 19%;
+  
+  --primary: 186 100% 50%;
+  --primary-foreground: 220 18% 5%;
+  
+  --secondary: 224 11% 19%;
+  --secondary-foreground: 216 11% 92%;
+  
+  --muted: 218 13% 12%;
+  --muted-foreground: 217 19% 46%;
+  
+  --accent: 186 100% 50%;
+  --accent-foreground: 220 18% 5%;
+  
+  --destructive: 360 100% 66%;
+  --destructive-foreground: 216 11% 92%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Range input defaults to hide ugly browser sliders */
+input[type=range] {
+  -webkit-appearance: none;
+  background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+}
+input[type=range]:focus {
+  outline: none;
+}

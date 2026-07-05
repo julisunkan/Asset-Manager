@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "DJ & Mixer"
+version = "1.0.0"
+id = "artifacts/dj-mixer"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18245
+
+[services.development]
+run = "pnpm --filter @workspace/dj-mixer run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/dj-mixer", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/dj-mixer/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18245"
+BASE_PATH = "/"
