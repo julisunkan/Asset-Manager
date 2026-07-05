@@ -21,7 +21,14 @@ import type {
 
 import type {
   HealthStatus,
+  RemoteTrack,
+  SearchAudiomackParams,
+  SearchSoundcloudParams,
+  SearchSpotifyParams,
+  SettingsStatus,
+  SpotifyResult,
   Track,
+  UpdateSettings,
   UpdateTrack,
   UpsertTrack
 } from './api.schemas';
@@ -420,4 +427,408 @@ export const useDeleteTrack = <TError = ErrorType<void>,
       > => {
       return useMutation(getDeleteTrackMutationOptions(options));
     }
+
+export const getGetSettingsUrl = () => {
+
+
+
+
+  return `/api/settings`
+}
+
+/**
+ * Values are never returned in full — only whether each key is configured, plus a masked preview.
+ * @summary Get masked credential status for all known integrations
+ */
+export const getSettings = async ( options?: RequestInit): Promise<SettingsStatus> => {
+
+  return customFetch<SettingsStatus>(getGetSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSettingsQueryKey = () => {
+    return [
+    `/api/settings`
+    ] as const;
+    }
+
+
+export const getGetSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettings>>> = ({ signal }) => getSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getSettings>>>
+export type GetSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get masked credential status for all known integrations
+ */
+
+export function useGetSettings<TData = Awaited<ReturnType<typeof getSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateSettingsUrl = () => {
+
+
+
+
+  return `/api/settings`
+}
+
+/**
+ * Only the provided keys are updated; omit a key to leave it unchanged. Send an empty string to clear a key.
+ * @summary Set one or more credential values
+ */
+export const updateSettings = async (updateSettings: UpdateSettings, options?: RequestInit): Promise<SettingsStatus> => {
+
+  return customFetch<SettingsStatus>(getUpdateSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateSettings)
+  }
+);}
+
+
+
+
+export const getUpdateSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSettings>>, TError,{data: BodyType<UpdateSettings>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSettings>>, TError,{data: BodyType<UpdateSettings>}, TContext> => {
+
+const mutationKey = ['updateSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSettings>>, {data: BodyType<UpdateSettings>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateSettings>>>
+    export type UpdateSettingsMutationBody = BodyType<UpdateSettings>
+    export type UpdateSettingsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set one or more credential values
+ */
+export const useUpdateSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSettings>>, TError,{data: BodyType<UpdateSettings>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSettings>>,
+        TError,
+        {data: BodyType<UpdateSettings>},
+        TContext
+      > => {
+      return useMutation(getUpdateSettingsMutationOptions(options));
+    }
+
+export const getSearchSoundcloudUrl = (params: SearchSoundcloudParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/integrations/soundcloud/search?${stringifiedParams}` : `/api/integrations/soundcloud/search`
+}
+
+/**
+ * Requires a SoundCloud Client ID to be configured in settings. Returns direct stream URLs playable in the local mixing engine.
+ * @summary Search SoundCloud tracks
+ */
+export const searchSoundcloud = async (params: SearchSoundcloudParams, options?: RequestInit): Promise<RemoteTrack[]> => {
+
+  return customFetch<RemoteTrack[]>(getSearchSoundcloudUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchSoundcloudQueryKey = (params?: SearchSoundcloudParams,) => {
+    return [
+    `/api/integrations/soundcloud/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchSoundcloudQueryOptions = <TData = Awaited<ReturnType<typeof searchSoundcloud>>, TError = ErrorType<void>>(params: SearchSoundcloudParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchSoundcloud>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchSoundcloudQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchSoundcloud>>> = ({ signal }) => searchSoundcloud(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchSoundcloud>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchSoundcloudQueryResult = NonNullable<Awaited<ReturnType<typeof searchSoundcloud>>>
+export type SearchSoundcloudQueryError = ErrorType<void>
+
+
+/**
+ * @summary Search SoundCloud tracks
+ */
+
+export function useSearchSoundcloud<TData = Awaited<ReturnType<typeof searchSoundcloud>>, TError = ErrorType<void>>(
+ params: SearchSoundcloudParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchSoundcloud>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchSoundcloudQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchAudiomackUrl = (params: SearchAudiomackParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/integrations/audiomack/search?${stringifiedParams}` : `/api/integrations/audiomack/search`
+}
+
+/**
+ * Requires an Audiomack API key/secret to be configured in settings. Returns direct stream URLs playable in the local mixing engine.
+ * @summary Search Audiomack tracks
+ */
+export const searchAudiomack = async (params: SearchAudiomackParams, options?: RequestInit): Promise<RemoteTrack[]> => {
+
+  return customFetch<RemoteTrack[]>(getSearchAudiomackUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchAudiomackQueryKey = (params?: SearchAudiomackParams,) => {
+    return [
+    `/api/integrations/audiomack/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchAudiomackQueryOptions = <TData = Awaited<ReturnType<typeof searchAudiomack>>, TError = ErrorType<void>>(params: SearchAudiomackParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchAudiomack>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchAudiomackQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchAudiomack>>> = ({ signal }) => searchAudiomack(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchAudiomack>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchAudiomackQueryResult = NonNullable<Awaited<ReturnType<typeof searchAudiomack>>>
+export type SearchAudiomackQueryError = ErrorType<void>
+
+
+/**
+ * @summary Search Audiomack tracks
+ */
+
+export function useSearchAudiomack<TData = Awaited<ReturnType<typeof searchAudiomack>>, TError = ErrorType<void>>(
+ params: SearchAudiomackParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchAudiomack>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchAudiomackQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchSpotifyUrl = (params: SearchSpotifyParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/integrations/spotify/search?${stringifiedParams}` : `/api/integrations/spotify/search`
+}
+
+/**
+ * Requires a Spotify Client ID/Secret in settings. Spotify does not allow raw audio access, so results have no stream URL — they can only be opened in Spotify, not mixed locally.
+ * @summary Search the Spotify catalog (metadata only)
+ */
+export const searchSpotify = async (params: SearchSpotifyParams, options?: RequestInit): Promise<SpotifyResult[]> => {
+
+  return customFetch<SpotifyResult[]>(getSearchSpotifyUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchSpotifyQueryKey = (params?: SearchSpotifyParams,) => {
+    return [
+    `/api/integrations/spotify/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchSpotifyQueryOptions = <TData = Awaited<ReturnType<typeof searchSpotify>>, TError = ErrorType<void>>(params: SearchSpotifyParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchSpotify>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchSpotifyQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchSpotify>>> = ({ signal }) => searchSpotify(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchSpotify>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchSpotifyQueryResult = NonNullable<Awaited<ReturnType<typeof searchSpotify>>>
+export type SearchSpotifyQueryError = ErrorType<void>
+
+
+/**
+ * @summary Search the Spotify catalog (metadata only)
+ */
+
+export function useSearchSpotify<TData = Awaited<ReturnType<typeof searchSpotify>>, TError = ErrorType<void>>(
+ params: SearchSpotifyParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchSpotify>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchSpotifyQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

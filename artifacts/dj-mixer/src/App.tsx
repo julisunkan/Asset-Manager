@@ -4,6 +4,7 @@ import { MusicLibrary } from './components/library/MusicLibrary';
 import { Deck } from './components/deck/Deck';
 import { Mixer } from './components/mixer/Mixer';
 import { VibesPanel } from './components/vibes/VibesPanel';
+import { Settings } from './components/settings/Settings';
 import { useAppStore } from './state/useAppStore';
 
 export default function App() {
@@ -50,6 +51,8 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      <Settings />
     </div>
   );
 }

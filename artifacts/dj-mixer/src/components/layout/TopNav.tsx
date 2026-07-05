@@ -1,10 +1,11 @@
 import React from 'react';
-import { Download, Music2, Shield } from 'lucide-react';
+import { Download, Music2, Shield, Settings as SettingsIcon } from 'lucide-react';
 import { useAppStore } from '../../state/useAppStore';
 
 export function TopNav() {
   const libraryOpen = useAppStore(s => s.libraryOpen);
   const setLibraryOpen = useAppStore(s => s.setLibraryOpen);
+  const setSettingsOpen = useAppStore(s => s.setSettingsOpen);
   const library = useAppStore(s => s.library);
 
   return (
@@ -56,6 +57,15 @@ export function TopNav() {
         <span className="w-2 h-2 rounded-full bg-[#00C853] shadow-[0_0_6px_#00C853] animate-pulse" />
         LIVE
       </div>
+
+      {/* Settings */}
+      <button
+        className="p-2 rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-colors"
+        title="Connected services & API keys"
+        onClick={() => setSettingsOpen(true)}
+      >
+        <SettingsIcon size={15} />
+      </button>
 
       {/* Export */}
       <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold shadow-[0_0_12px_rgba(0,229,255,0.25)] transition-all active:scale-95">

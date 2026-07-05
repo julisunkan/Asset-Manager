@@ -72,3 +72,76 @@ export interface UpdateTrack {
   loopOut?: number | null;
 }
 
+export interface CredentialStatus {
+  configured: boolean;
+  /** Masked preview, e.g. "••••ab12", or null if not configured */
+  preview?: string | null;
+}
+
+/**
+ * Map of credential key to its configured status. Never contains raw secret values.
+ */
+export interface SettingsStatus {
+  soundcloudClientId: CredentialStatus;
+  audiomackApiKey: CredentialStatus;
+  audiomackApiSecret: CredentialStatus;
+  spotifyClientId: CredentialStatus;
+  spotifyClientSecret: CredentialStatus;
+}
+
+/**
+ * Any subset of credential keys. Send an empty string to clear a key.
+ */
+export interface UpdateSettings {
+  soundcloudClientId?: string;
+  audiomackApiKey?: string;
+  audiomackApiSecret?: string;
+  spotifyClientId?: string;
+  spotifyClientSecret?: string;
+}
+
+export type RemoteTrackSource = typeof RemoteTrackSource[keyof typeof RemoteTrackSource];
+
+
+export const RemoteTrackSource = {
+  soundcloud: 'soundcloud',
+  audiomack: 'audiomack',
+} as const;
+
+/**
+ * A searchable track from a streaming service with a direct, locally-playable stream URL.
+ */
+export interface RemoteTrack {
+  id: string;
+  name: string;
+  artist: string;
+  /** Duration in seconds, or -1 if unknown */
+  duration: number;
+  streamUrl: string;
+  artworkUrl?: string | null;
+  source: RemoteTrackSource;
+}
+
+/**
+ * Metadata-only Spotify search result — no stream URL, cannot be mixed locally.
+ */
+export interface SpotifyResult {
+  id: string;
+  name: string;
+  artist: string;
+  albumArt?: string | null;
+  externalUrl: string;
+}
+
+export type SearchSoundcloudParams = {
+q: string;
+};
+
+export type SearchAudiomackParams = {
+q: string;
+};
+
+export type SearchSpotifyParams = {
+q: string;
+};
+

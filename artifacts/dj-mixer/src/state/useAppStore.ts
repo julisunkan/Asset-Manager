@@ -11,6 +11,7 @@ interface AppState {
   activeDeckFocus: 'A' | 'B';
   activeVibe: string | null;
   libraryOpen: boolean;
+  settingsOpen: boolean;
 
   // Actions
   addTrack: (track: TrackInfo) => void;
@@ -24,6 +25,7 @@ interface AppState {
   setActiveDeckFocus: (deck: 'A' | 'B') => void;
   setActiveVibe: (vibe: string | null) => void;
   setLibraryOpen: (open: boolean) => void;
+  setSettingsOpen: (open: boolean) => void;
 
   /** Set or update a hot cue on the currently-loaded track for a deck. */
   setHotCue: (deck: 'A' | 'B', index: number, time: number) => void;
@@ -68,6 +70,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeDeckFocus: 'A',
   activeVibe: null,
   libraryOpen: false,
+  settingsOpen: false,
 
   addTrack: (track) => {
     set((s) => ({ library: [...s.library, track] }));
@@ -111,6 +114,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveDeckFocus: (deck) => set({ activeDeckFocus: deck }),
   setActiveVibe: (vibe) => set({ activeVibe: vibe }),
   setLibraryOpen: (open) => set({ libraryOpen: open }),
+  setSettingsOpen: (open) => set({ settingsOpen: open }),
 
   setHotCue: (deck, index, time) => {
     const state = get();

@@ -6,8 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './credentialStatus';
 export * from './healthStatus';
 export * from './hotCue';
+export * from './remoteTrack';
+export * from './remoteTrackSource';
+export * from './searchAudiomackParams';
+export * from './searchSoundcloudParams';
+export * from './searchSpotifyParams';
+export * from './settingsStatus';
+export * from './spotifyResult';
 export * from './track';
+export * from './updateSettings';
 export * from './updateTrack';
 export * from './upsertTrack';

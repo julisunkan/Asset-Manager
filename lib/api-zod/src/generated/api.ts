@@ -197,3 +197,125 @@ export const DeleteTrackParams = zod.object({
 export const DeleteTrackResponse = zod.void()
 
 
+/**
+ * Values are never returned in full — only whether each key is configured, plus a masked preview.
+ * @summary Get masked credential status for all known integrations
+ */
+export const GetSettingsResponse = zod.object({
+  "soundcloudClientId": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "audiomackApiKey": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "audiomackApiSecret": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "spotifyClientId": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "spotifyClientSecret": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+})
+}).describe('Map of credential key to its configured status. Never contains raw secret values.')
+
+
+/**
+ * Only the provided keys are updated; omit a key to leave it unchanged. Send an empty string to clear a key.
+ * @summary Set one or more credential values
+ */
+export const UpdateSettingsBody = zod.object({
+  "soundcloudClientId": zod.string().optional(),
+  "audiomackApiKey": zod.string().optional(),
+  "audiomackApiSecret": zod.string().optional(),
+  "spotifyClientId": zod.string().optional(),
+  "spotifyClientSecret": zod.string().optional()
+}).describe('Any subset of credential keys. Send an empty string to clear a key.')
+
+export const UpdateSettingsResponse = zod.object({
+  "soundcloudClientId": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "audiomackApiKey": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "audiomackApiSecret": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "spotifyClientId": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+}),
+  "spotifyClientSecret": zod.object({
+  "configured": zod.boolean(),
+  "preview": zod.string().nullish().describe('Masked preview, e.g. \"••••ab12\", or null if not configured')
+})
+}).describe('Map of credential key to its configured status. Never contains raw secret values.')
+
+
+/**
+ * Requires a SoundCloud Client ID to be configured in settings. Returns direct stream URLs playable in the local mixing engine.
+ * @summary Search SoundCloud tracks
+ */
+export const SearchSoundcloudQueryParams = zod.object({
+  "q": zod.coerce.string()
+})
+
+export const SearchSoundcloudResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "artist": zod.string(),
+  "duration": zod.number().describe('Duration in seconds, or -1 if unknown'),
+  "streamUrl": zod.string(),
+  "artworkUrl": zod.string().nullish(),
+  "source": zod.enum(['soundcloud', 'audiomack'])
+}).describe('A searchable track from a streaming service with a direct, locally-playable stream URL.')
+export const SearchSoundcloudResponse = zod.array(SearchSoundcloudResponseItem)
+
+
+/**
+ * Requires an Audiomack API key/secret to be configured in settings. Returns direct stream URLs playable in the local mixing engine.
+ * @summary Search Audiomack tracks
+ */
+export const SearchAudiomackQueryParams = zod.object({
+  "q": zod.coerce.string()
+})
+
+export const SearchAudiomackResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "artist": zod.string(),
+  "duration": zod.number().describe('Duration in seconds, or -1 if unknown'),
+  "streamUrl": zod.string(),
+  "artworkUrl": zod.string().nullish(),
+  "source": zod.enum(['soundcloud', 'audiomack'])
+}).describe('A searchable track from a streaming service with a direct, locally-playable stream URL.')
+export const SearchAudiomackResponse = zod.array(SearchAudiomackResponseItem)
+
+
+/**
+ * Requires a Spotify Client ID/Secret in settings. Spotify does not allow raw audio access, so results have no stream URL — they can only be opened in Spotify, not mixed locally.
+ * @summary Search the Spotify catalog (metadata only)
+ */
+export const SearchSpotifyQueryParams = zod.object({
+  "q": zod.coerce.string()
+})
+
+export const SearchSpotifyResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "artist": zod.string(),
+  "albumArt": zod.string().nullish(),
+  "externalUrl": zod.string()
+}).describe('Metadata-only Spotify search result — no stream URL, cannot be mixed locally.')
+export const SearchSpotifyResponse = zod.array(SearchSpotifyResponseItem)
+
+

@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { Search, Plus, Music, HardDrive, Link, X, AlertCircle, ListMusic, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, Music, HardDrive, Link, Cloud } from 'lucide-react';
 import { useAppStore } from '../../state/useAppStore';
 import { TrackInfo } from '../../types';
 import { parseID3 } from '../../engine/TrackParser';
-import { parsePlaylistUrl, looksLikePlaylist } from '../../engine/PlaylistParser';
 import { useListTracks } from '@workspace/api-client-react';
 import { applySavedTrack } from '../../lib/librarySync';
 import { fingerprintFor } from '../../lib/fingerprint';
+import { ImportPanel } from './ImportPanel';
 
 export function MusicLibrary() {
   const library = useAppStore(state => state.library);
@@ -19,12 +19,7 @@ export function MusicLibrary() {
   // so re-adding the same local file restores everything without re-analyzing.
   const { data: savedTracks } = useListTracks();
 
-  const [showUrlInput, setShowUrlInput] = useState(false);
-  const [urlValue, setUrlValue] = useState('');
-  const [urlName, setUrlName] = useState('');
-  const [urlError, setUrlError] = useState('');
-  const [urlLoading, setUrlLoading] = useState(false);
-  const [urlSuccess, setUrlSuccess] = useState<string | null>(null); // e.g. "Added 12 tracks"
+  const [showImportPanel, setShowImportPanel] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -113,101 +108,13 @@ export function MusicLibrary() {
     worker.postMessage({ action: 'analyzeUrl', url: track.url, sampleRate: 44100 });
   };
 
-  /** Build a blank TrackInfo stub for a remote URL entry. */
-  const makeUrlTrack = (url: string, name: string, artist: string): TrackInfo => ({
-    id: crypto.randomUUID(),
-    url,
-    name,
-    artist,
-    album: 'Remote',
-    genre: 'Unknown',
-    duration: 0,
-    bpm: null,
-    bpmConfidence: 0,
-    key: null,
-    camelot: null,
-    energy: 0,
-    mood: 'neutral',
-    danceability: 0,
-    loudness: 0,
-    albumArt: null,
-    waveformData: null,
-    isFavorite: false,
-    colorLabel: null,
-    hotCues: [],
-    loopIn: null,
-    loopOut: null,
-  });
-
-  const handleAddUrl = async () => {
-    setUrlError('');
-    setUrlSuccess(null);
-    const raw = urlValue.trim();
-    if (!raw) { setUrlError('Please enter a URL.'); return; }
-
-    let parsed: URL;
-    try {
-      parsed = new URL(raw);
-    } catch {
-      setUrlError('Invalid URL — please include http:// or https://');
-      return;
-    }
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      setUrlError('Only http:// and https:// URLs are supported.');
-      return;
-    }
-
-    setUrlLoading(true);
-
-    // ── Playlist URL ──────────────────────────────────────────────────────────
-    if (looksLikePlaylist(raw)) {
-      try {
-        const entries = await parsePlaylistUrl(raw);
-        if (entries.length === 0) {
-          setUrlError('Playlist parsed but contained no playable tracks.');
-          setUrlLoading(false);
-          return;
-        }
-        for (const entry of entries) {
-          let track = makeUrlTrack(entry.url, entry.name || entry.url, entry.artist);
-          const fingerprint = fingerprintFor(track);
-          const saved = fingerprint ? savedTracks?.find((t) => t.fingerprint === fingerprint) : undefined;
-          if (saved) track = applySavedTrack(track, saved);
-          addTrack(track);
-          if (!saved || saved.bpm == null) analyzeTrackUrl(track);
-        }
-        setUrlSuccess(`Added ${entries.length} track${entries.length !== 1 ? 's' : ''} from playlist`);
-        setUrlValue('');
-        setUrlName('');
-      } catch (err) {
-        setUrlError(
-          err instanceof Error
-            ? `Couldn't load playlist: ${err.message}. Check the URL and CORS headers.`
-            : 'Failed to load playlist.'
-        );
-      } finally {
-        setUrlLoading(false);
-      }
-      return;
-    }
-
-    // ── Single track URL ──────────────────────────────────────────────────────
-    const derivedName =
-      urlName.trim() ||
-      decodeURIComponent(parsed.pathname.split('/').filter(Boolean).pop() || parsed.hostname) ||
-      'Remote Track';
-
-    let track = makeUrlTrack(raw, derivedName, parsed.hostname);
+  /** Add a track resolved from a streaming-service import (SoundCloud/Audiomack). */
+  const handleImportedTrack = (track: TrackInfo) => {
     const fingerprint = fingerprintFor(track);
     const saved = fingerprint ? savedTracks?.find((t) => t.fingerprint === fingerprint) : undefined;
-    if (saved) track = applySavedTrack(track, saved);
-    addTrack(track);
-    if (!saved || saved.bpm == null) analyzeTrackUrl(track);
-
-    setUrlValue('');
-    setUrlName('');
-    setUrlLoading(false);
-    setShowUrlInput(false);
+    const finalTrack = saved ? applySavedTrack(track, saved) : track;
+    addTrack(finalTrack);
+    if (!saved || saved.bpm == null) analyzeTrackUrl(finalTrack);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -246,12 +153,16 @@ export function MusicLibrary() {
             <Plus size={16} /> Add Music
           </button>
           <button
-            className="px-3 py-1.5 rounded text-sm font-semibold flex items-center justify-center gap-1.5 border border-border bg-background hover:bg-muted transition-colors"
-            title="Add from URL"
-            onClick={() => { setShowUrlInput(v => !v); setUrlError(''); setUrlSuccess(null); }}
+            className={`px-3 py-1.5 rounded text-sm font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
+              showImportPanel
+                ? 'bg-primary/15 border-primary/50 text-primary'
+                : 'border-border bg-background hover:bg-muted'
+            }`}
+            title="Import from a streaming service"
+            onClick={() => setShowImportPanel(v => !v)}
           >
-            <Link size={15} />
-            <span className="hidden sm:inline">URL</span>
+            <Cloud size={15} />
+            <span className="hidden sm:inline">Import</span>
           </button>
           <input
             type="file"
@@ -263,105 +174,8 @@ export function MusicLibrary() {
           />
         </div>
 
-        {/* URL / Playlist Input Panel */}
-        {showUrlInput && (
-          <div className="bg-background border border-border rounded-lg p-3 space-y-2">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-primary uppercase tracking-wider">Add from URL</span>
-                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">
-                  Playlist support
-                </span>
-              </div>
-              <button
-                onClick={() => { setShowUrlInput(false); setUrlError(''); setUrlSuccess(null); }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            {/* Success state — shown after a playlist import */}
-            {urlSuccess ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-[#00C853] text-sm font-semibold">
-                  <CheckCircle2 size={15} />
-                  {urlSuccess}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    className="flex-1 py-1.5 rounded border border-border bg-background text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => { setUrlSuccess(null); setUrlValue(''); setUrlName(''); }}
-                  >
-                    Add another
-                  </button>
-                  <button
-                    className="flex-1 py-1.5 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
-                    onClick={() => { setShowUrlInput(false); setUrlSuccess(null); }}
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <input
-                  type="url"
-                  placeholder="https://example.com/playlist.m3u  or  track.mp3"
-                  value={urlValue}
-                  onChange={e => { setUrlValue(e.target.value); setUrlError(''); }}
-                  onKeyDown={e => { if (e.key === 'Enter') handleAddUrl(); }}
-                  className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 font-mono"
-                  autoFocus
-                />
-                {/* Show track-name field only for non-playlist URLs */}
-                {urlValue && !looksLikePlaylist(urlValue) && (
-                  <input
-                    type="text"
-                    placeholder="Track name (optional)"
-                    value={urlName}
-                    onChange={e => setUrlName(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') handleAddUrl(); }}
-                    className="w-full bg-card border border-border rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
-                  />
-                )}
-                {urlError && (
-                  <div className="flex items-start gap-1.5 text-[#FF5252] text-xs">
-                    <AlertCircle size={12} className="mt-0.5 shrink-0" />
-                    {urlError}
-                  </div>
-                )}
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Supports single tracks and playlists&nbsp;
-                  <span className="font-mono bg-muted px-1 rounded">.m3u</span>{' '}
-                  <span className="font-mono bg-muted px-1 rounded">.m3u8</span>{' '}
-                  <span className="font-mono bg-muted px-1 rounded">.pls</span>{' '}
-                  <span className="font-mono bg-muted px-1 rounded">.xspf</span>.
-                  The server must send CORS headers. Audio is <strong>streamed</strong> — nothing is downloaded to this device.
-                </p>
-                <button
-                  onClick={handleAddUrl}
-                  disabled={urlLoading || !urlValue.trim()}
-                  className="w-full py-1.5 rounded bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 transition-colors flex items-center justify-center gap-2"
-                >
-                  {urlLoading ? (
-                    <>
-                      <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                      </svg>
-                      {looksLikePlaylist(urlValue) ? 'Importing playlist…' : 'Adding track…'}
-                    </>
-                  ) : (
-                    <>
-                      {looksLikePlaylist(urlValue) ? <ListMusic size={14} /> : <Link size={14} />}
-                      {looksLikePlaylist(urlValue) ? 'Import Playlist' : 'Add Track'}
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-          </div>
+        {showImportPanel && (
+          <ImportPanel onAddTrack={handleImportedTrack} onClose={() => setShowImportPanel(false)} />
         )}
       </div>
 
@@ -380,8 +194,8 @@ export function MusicLibrary() {
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 text-center border-2 border-dashed border-sidebar-border m-4 rounded-xl bg-background/50">
             <HardDrive className="w-12 h-12 mb-4 opacity-50" />
             <p className="font-semibold text-foreground mb-1">Your library is empty</p>
-            <p className="text-sm">Drag and drop audio files here, or paste a URL</p>
-            <p className="text-xs mt-4 text-primary opacity-80">Files stay local · URLs are streamed directly</p>
+            <p className="text-sm">Drag and drop audio files here, or import from a service</p>
+            <p className="text-xs mt-4 text-primary opacity-80">Files stay local · Streams play directly from source</p>
           </div>
         ) : (
           library.map((track, i) => (

@@ -12,6 +12,10 @@ tags:
     description: Health operations
   - name: tracks
     description: Music library track metadata and cue points
+  - name: settings
+    description: User-supplied API credentials for third-party music services
+  - name: integrations
+    description: Search and import from third-party music services
 paths:
   /healthz:
     get:
@@ -100,6 +104,106 @@ paths:
           description: Deleted
         "404":
           description: Track not found
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get masked credential status for all known integrations
+      description: Values are never returned in full — only whether each key is configured, plus a masked preview.
+      responses:
+        "200":
+          description: Masked settings status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettingsStatus"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Set one or more credential values
+      description: Only the provided keys are updated; omit a key to leave it unchanged. Send an empty string to clear a key.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSettings"
+      responses:
+        "200":
+          description: Updated masked settings status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettingsStatus"
+  /integrations/soundcloud/search:
+    get:
+      operationId: searchSoundcloud
+      tags: [integrations]
+      summary: Search SoundCloud tracks
+      description: Requires a SoundCloud Client ID to be configured in settings. Returns direct stream URLs playable in the local mixing engine.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RemoteTrack"
+        "400":
+          description: Missing or invalid credentials
+  /integrations/audiomack/search:
+    get:
+      operationId: searchAudiomack
+      tags: [integrations]
+      summary: Search Audiomack tracks
+      description: Requires an Audiomack API key/secret to be configured in settings. Returns direct stream URLs playable in the local mixing engine.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RemoteTrack"
+        "400":
+          description: Missing or invalid credentials
+  /integrations/spotify/search:
+    get:
+      operationId: searchSpotify
+      tags: [integrations]
+      summary: Search the Spotify catalog (metadata only)
+      description: Requires a Spotify Client ID/Secret in settings. Spotify does not allow raw audio access, so results have no stream URL — they can only be opened in Spotify, not mixed locally.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching tracks (metadata only, no local playback)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpotifyResult"
+        "400":
+          description: Missing or invalid credentials
 components:
   schemas:
     HealthStatus:
@@ -251,4 +355,97 @@ components:
         loopOut:
           type: number
           nullable: true
+    SettingsStatus:
+      type: object
+      description: Map of credential key to its configured status. Never contains raw secret values.
+      properties:
+        soundcloudClientId:
+          $ref: "#/components/schemas/CredentialStatus"
+        audiomackApiKey:
+          $ref: "#/components/schemas/CredentialStatus"
+        audiomackApiSecret:
+          $ref: "#/components/schemas/CredentialStatus"
+        spotifyClientId:
+          $ref: "#/components/schemas/CredentialStatus"
+        spotifyClientSecret:
+          $ref: "#/components/schemas/CredentialStatus"
+      required:
+        - soundcloudClientId
+        - audiomackApiKey
+        - audiomackApiSecret
+        - spotifyClientId
+        - spotifyClientSecret
+    CredentialStatus:
+      type: object
+      properties:
+        configured:
+          type: boolean
+        preview:
+          type: string
+          nullable: true
+          description: Masked preview, e.g. "••••ab12", or null if not configured
+      required:
+        - configured
+    UpdateSettings:
+      type: object
+      description: Any subset of credential keys. Send an empty string to clear a key.
+      properties:
+        soundcloudClientId:
+          type: string
+        audiomackApiKey:
+          type: string
+        audiomackApiSecret:
+          type: string
+        spotifyClientId:
+          type: string
+        spotifyClientSecret:
+          type: string
+    RemoteTrack:
+      type: object
+      description: A searchable track from a streaming service with a direct, locally-playable stream URL.
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        artist:
+          type: string
+        duration:
+          type: number
+          description: Duration in seconds, or -1 if unknown
+        streamUrl:
+          type: string
+        artworkUrl:
+          type: string
+          nullable: true
+        source:
+          type: string
+          enum: [soundcloud, audiomack]
+      required:
+        - id
+        - name
+        - artist
+        - duration
+        - streamUrl
+        - source
+    SpotifyResult:
+      type: object
+      description: Metadata-only Spotify search result — no stream URL, cannot be mixed locally.
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        artist:
+          type: string
+        albumArt:
+          type: string
+          nullable: true
+        externalUrl:
+          type: string
+      required:
+        - id
+        - name
+        - artist
+        - externalUrl
 
