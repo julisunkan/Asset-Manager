@@ -79,19 +79,20 @@ export function Deck({ id }: { id: 'A' | 'B' }) {
 
   const togglePlay = async () => {
     if (!track) return;
-    const AE = await import('../../engine/AudioEngine').then(m => m.default);
-    if (AE.getContext().state === 'suspended') await AE.getContext().resume();
+    try {
+      const AE = await import('../../engine/AudioEngine').then(m => m.default);
+      if (AE.getContext().state === 'suspended') await AE.getContext().resume();
 
-    if (deckState.isPlaying) {
-      engine.pause();
-      updateDeck(id, { isPlaying: false });
-    } else {
-      try {
+      if (deckState.isPlaying) {
+        engine.pause();
+        updateDeck(id, { isPlaying: false });
+      } else {
         await engine.play();
         updateDeck(id, { isPlaying: true });
-      } catch {
-        updateDeck(id, { isPlaying: false });
       }
+    } catch (err) {
+      console.error('Failed to toggle playback for deck', id, err);
+      updateDeck(id, { isPlaying: false });
     }
   };
 
